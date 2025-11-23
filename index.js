@@ -78,10 +78,39 @@ app.delete('/admins/:id' , (req, res) => {
         })
     })
 
+    app.use('/welcome', (req, res, next) => {
+        console.log(`A new request received at ` + Date.now());
+    
+        res.on('finish', () => {
+            console.log('Response finished');
+        });
+    
+        next();
+    });
+    
+    app.get('/welcome', (req, res) => {
+        res.send('Welcome to Express.js');
+    });
+
+    
+    app.get('/error-test', (req, res) => {
+        throw new Error('this is test error');
+    });
+    
+    // Error handling middleware (must be after routes)
+    app.use((err, req, res, next) => {
+        console.log('Error:', err.message);
+        res.status(500).send('Internal server error');
+    });
+    
+
+    // Catch-all route for 404 - must be last (no path means it matches all routes)
+    app.use((req, res) => {
+        res.status(404).send('sorry this is a invalid url');
+    })
 
 
-
-
+   
 app.listen(5000, () => {
     console.log('Server is running on http://localhost:5000');
 });
