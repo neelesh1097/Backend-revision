@@ -1,14 +1,30 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import router from './route.js'
 
-
+// Resolve __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 app.use(express.json());
 
+// Configure EJS view engine
+app.set('views', 'view');
+app.set('view engine', 'ejs');
+
+// Serve static files from /public using an absolute path
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.get('/' , (req,res) => {
-    res.send("the work of art")
+    res.send('hello express')
+})
+
+app.get('/view' , (req,res) => {
+   const userName ='John doe'
+   res.render('index', { title: 'Home', userName })
 })
 
 app.use('/user', router) 
