@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import router from './route.js'
@@ -9,6 +10,13 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Configure Multer (in‑memory, no files saved to disk for now)
+const upload = multer();
+
+app.use(express.urlencoded({ extended: true }));
+
+app.use(upload.array());
+
 app.use(express.json());
 
 // Configure EJS view engine
@@ -18,8 +26,18 @@ app.set('view engine', 'ejs');
 // Serve static files from /public using an absolute path
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve images from /images URL prefix
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 app.get('/' , (req,res) => {
     res.send('hello express')
+})
+
+
+// Example route using Multer for multipart/form-data (no files, only fields)
+app.post('/form' , (req,res) => {
+    console.log(req.body);
+    res.send('from received')
 })
 
 app.get('/view' , (req,res) => {
