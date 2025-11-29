@@ -4,6 +4,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import router from './route.js'
 
+
+const storage = multer.diskStorage({
+    destination:'uploads'
+})
+
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,11 +16,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Configure Multer (in‑memory, no files saved to disk for now)
-const upload = multer();
+const upload = multer({storage});
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use(upload.array());
+app.use(upload.single('image'));
 
 app.use(express.json());
 
@@ -37,6 +42,7 @@ app.get('/' , (req,res) => {
 // Example route using Multer for multipart/form-data (no files, only fields)
 app.post('/form' , (req,res) => {
     console.log(req.body);
+    console.log(req.file);
     res.send('from received')
 })
 
