@@ -4,10 +4,16 @@ import path from "path";
 import { fileURLToPath } from "url";
 import router from './route.js'
 
+import {connectDB} from './config/db.js';
+import {Person} from './models/person.js';
 
 const storage = multer.diskStorage({
-    destination:'uploads'
-})
+    destination: 'uploads/',   // or a callback
+    filename: (req, file, cb) => {
+      cb(null, file.fieldname + '_' + Date.now() + "_" + file.originalname);
+    },
+  });
+  
 
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +55,33 @@ app.post('/form' , (req,res) => {
 app.get('/view' , (req,res) => {
    const userName ='John doe'
    res.render('index', { title: 'Home', userName })
+})
+
+app.post('/person' , async(req,res) => {
+    try {
+        const {name, age, email} = req.body;
+
+        const newPerson = new Person({
+            name,
+            age,
+            email
+        });
+
+        await newPerson.save();
+
+        console.log('Person saved:', newPerson);
+
+        res.status(201).json({
+            message: 'Person added successfully',
+            person: newPerson
+        });
+    } catch (error) {
+        console.error('Error saving person:', error);
+        res.status(500).json({
+            error: 'Failed to save person',
+            message: error.message
+        });
+    }
 })
 
 app.use('/user', router) 
@@ -151,6 +184,11 @@ app.delete('/admins/:id' , (req, res) => {
 
 
    
-app.listen(5000, () => {
-    console.log('Server is running on http://localhost:5000');
+// Connect to database and start server
+connectDB().then(() => {
+    app.listen(5000, () => {
+        console.log('Server is running on http://localhost:5000');
+    });
+}).catch((error) => {
+    console.error('Failed to start server:', error);
 });
