@@ -84,6 +84,22 @@ app.post('/person' , async(req,res) => {
     }
 })
 
+
+
+app.put('/person' , async (req,res) => {
+    // const {email} = req.body;
+
+    const {id} = req.body;
+
+    // const persondata = await Person.find({email});
+    const persondata = await Person.findByIdAndUpdate(id , {age:'28'});
+
+    console.log(persondata)
+
+    res.send('person updated' )
+
+})
+
 app.use('/user', router) 
 
 app.post('/login' , (req,res) => {
