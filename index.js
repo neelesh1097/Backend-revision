@@ -6,6 +6,7 @@ import router from './route.js'
 
 import {connectDB} from './config/db.js';
 import {Person} from './models/person.js';
+import cookieParser from 'cookie-parser';
 
 const storage = multer.diskStorage({
     destination: 'uploads/',   // or a callback
@@ -15,6 +16,7 @@ const storage = multer.diskStorage({
   });
   
 
+ 
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +32,8 @@ app.use(upload.single('image'));
 
 app.use(express.json());
 
+app.use(cookieParser());
+
 // Configure EJS view engine
 app.set('views', 'view');
 app.set('view engine', 'ejs');
@@ -41,7 +45,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/' , (req,res) => {
+    res.cookie('name' , 'express-app' ,{maxAge: 360000})
     res.send('hello express')
+})
+
+app.get('/fetch', (req,res) => {
+
+    console.log(req.cookies)
+    res.send('Api called')
 })
 
 
@@ -99,6 +110,22 @@ app.put('/person' , async (req,res) => {
     res.send('person updated' )
 
 })
+
+
+app.put('/person/:id' , async (req,res) => {
+    // const {email} = req.body;
+
+    const {id} = req.params;
+
+    // const persondata = await Person.find({email});
+    const persondata = await Person.findByIdAndDelete(id);
+
+    console.log(persondata)
+
+    res.send('person deleted' )
+
+})
+
 
 app.use('/user', router) 
 
