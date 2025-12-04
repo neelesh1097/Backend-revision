@@ -8,6 +8,10 @@ import {connectDB} from './config/db.js';
 import {Person} from './models/person.js';
 import cookieParser from 'cookie-parser';
 
+import session from 'express-session';
+
+
+
 const storage = multer.diskStorage({
     destination: 'uploads/',   // or a callback
     filename: (req, file, cb) => {
@@ -25,6 +29,15 @@ const app = express();
 
 // Configure Multer (in‑memory, no files saved to disk for now)
 const upload = multer({storage});
+
+
+app.use(
+    session({
+      secret: "sample-secret",
+      resave: false,
+      saveUninitialized: false
+    })
+  );
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -67,6 +80,16 @@ app.get('/view' , (req,res) => {
    const userName ='John doe'
    res.render('index', { title: 'Home', userName })
 })
+
+app.get("/visit", (req, res) => {
+    if (req.session.page_views) {
+      req.session.page_views++;
+      res.send(`You visited this page ${req.session.page_views} times`);
+    } else {
+      req.session.page_views = 1;
+      res.send("You visited for the first time!");
+    }
+  });
 
 app.post('/person' , async(req,res) => {
     try {
@@ -224,6 +247,8 @@ app.delete('/admins/:id' , (req, res) => {
     app.use((req, res) => {
         res.status(404).send('sorry this is a invalid url');
     })
+
+
 
 
    
