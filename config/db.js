@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 
 export const connectDB = async() => {
-    const MONGODB_URI = 'mongodb+srv://neelesh2003:neelesh123@cluster0.eoqktxa.mongodb.net/Express?appName=Cluster0';
+    const MONGODB_URI = 'ENTER KRY HERE';
 
     try {
         await mongoose.connect(MONGODB_URI);
