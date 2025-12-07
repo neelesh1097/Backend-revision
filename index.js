@@ -3,6 +3,8 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import router from './route.js'
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 import {connectDB} from './config/db.js';
 import {Person} from './models/person.js';
@@ -150,7 +152,120 @@ app.put('/person/:id' , async (req,res) => {
 })
 
 
-app.use('/user', router) 
+app.use('/user', router);
+
+// Temporary in-memory store (replace with DB in production)
+const users = [];
+
+// Register user
+app.post('/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'username and password required' });
+    }
+
+    // check if user already exists
+    const existing = users.find(u => u.username === username);
+    if (existing) {
+      return res.status(409).json({ error: 'user already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
+    users.push({
+      username,
+      password: hashedPassword
+    });
+
+    return res.status(201).json({ message: 'user registered' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+// Login user
+app.post('/logins', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'username and password required' });
+    }
+
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      // do not reveal whether username exists
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+
+    // On success: issue a session/token (example: return success message)
+    return res.json({ message: 'login successful' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+
+app.get('/dashboard', (req, res) => {
+  try {
+    const authHeader = req.header('Authorization');
+
+    if (!authHeader) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    // Typically token is sent as: "Bearer <token>"
+    const token = authHeader.replace("Bearer ", "").trim();
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // If successful, return protected data
+    return res.json({
+      message: 'Dashboard accessed',
+      user: decoded
+    });
+
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+});
+
+app.get('/api/product' , (req,res) => {
+    const product = [
+        {id:1 , name:'Laptop' , price:1000},
+        {id:2 , name:'Mobile' , price:500}
+
+       
+]
+
+res.status(200).json({product})
+})
+
+app.get('/api/product/:id' , (req,res) => {
+    const products = [
+        {id:1 , name:'Laptop' , price:1000},
+        {id:2 , name:'Mobile' , price:500}
+
+       
+]
+
+const product = products.find(p => p.id === Number(req.params.id))
+
+if(!product){
+    return res.status(404).json({message: 'not available'})
+}
+})
+
+
+
 
 app.post('/login' , (req,res) => {
     try {
